@@ -4,10 +4,18 @@ using UnrealBuildTool;
 
 public class DancysGame : ModuleRules
 {
-	public DancysGame(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+    public DancysGame(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
-	}
+        PublicDependencyModuleNames.AddRange(new string[] {
+                    "Core",
+                    "CoreUObject",
+                    "Engine",
+                    "InputCore",
+                    "GameplayAbilities",
+                    "GameplayTags",
+                    "GameplayTasks",
+                    "EnhancedInput" });
+    }
 }

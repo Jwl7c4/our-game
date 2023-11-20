@@ -3,3 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+UENUM()
+enum class EAbilityInput : uint8
+{
+	None,
+	Confirm,
+	Cancel,
+};
