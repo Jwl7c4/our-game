@@ -6,10 +6,18 @@
 
 ADancysGameGameMode::ADancysGameGameMode()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/DancysGame/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+}
+
+void ADancysGameGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	if (PawnClass != NULL)
 	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
+		DefaultPawnClass = PawnClass;
 	}
+	else
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("InitGame - No player pawn class selected"));
+	}
+
+	Super::InitGame(MapName, Options, ErrorMessage);
 }

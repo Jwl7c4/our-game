@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+
 #include "DancysGameGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -13,4 +14,10 @@ class ADancysGameGameMode : public AGameModeBase
 
 public:
 	ADancysGameGameMode();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class ACharacter> PawnClass;
+
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 };
