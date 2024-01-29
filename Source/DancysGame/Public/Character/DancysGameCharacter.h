@@ -50,6 +50,23 @@ public:
 
 	ADancysGameCharacter();
 
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns FollowCamera subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+	TSubclassOf<class UGameplayAbility> EquipAbility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+	TSubclassOf<class UGameplayAbility> UnEquipAbility;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void EquipRifle();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void UnEquipRifle();
+
 protected:
 
 	// To add mapping context
@@ -61,10 +78,5 @@ protected:
 	// Called on the client when the Character is assigned it's Player State.
 	virtual void OnRep_PlayerState() override;
 
-public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
 

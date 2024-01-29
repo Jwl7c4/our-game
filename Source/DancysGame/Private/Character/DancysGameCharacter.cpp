@@ -99,3 +99,45 @@ void ADancysGameCharacter::OnRep_PlayerState()
 		CharacterAttributeSet = PlayerStateBase->CharacterAttributeSet;
 	}
 }
+
+void ADancysGameCharacter::EquipRifle()
+{
+	if (AbilitySystemComponent)
+	{
+		// Create an ability spec
+		FGameplayAbilitySpecDef SpecDef = FGameplayAbilitySpecDef();
+		SpecDef.Ability = EquipAbility;
+		FGameplayAbilitySpec Spec(SpecDef, 1); // Set level to 1 or the desired level
+
+		// todo - should this just be permanent?
+		AbilitySystemComponent->GiveAbilityAndActivateOnce(Spec);
+
+		// Remove the ability after activation (if needed)
+		AbilitySystemComponent->ClearAbility(Spec.Handle);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UWeaponItem::Use - Can't Equip. Ability System Component Not Set"));
+	}
+}
+
+void ADancysGameCharacter::UnEquipRifle()
+{
+	if (AbilitySystemComponent)
+	{
+		// Create an ability spec
+		FGameplayAbilitySpecDef SpecDef = FGameplayAbilitySpecDef();
+		SpecDef.Ability = UnEquipAbility;
+		FGameplayAbilitySpec Spec(SpecDef, 1); // Set level to 1 or the desired level
+
+		// todo - should this just be permanent?
+		AbilitySystemComponent->GiveAbilityAndActivateOnce(Spec);
+
+		// Remove the ability after activation (if needed)
+		AbilitySystemComponent->ClearAbility(Spec.Handle);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UWeaponItem::Use - Can't UnEquip. Ability System Component Not Set"));
+	}
+}
