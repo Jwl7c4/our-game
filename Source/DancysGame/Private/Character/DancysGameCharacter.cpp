@@ -2,6 +2,7 @@
 
 #include "Character/DancysGameCharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -11,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Player/ThePlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -21,6 +23,11 @@ ADancysGameCharacter::ADancysGameCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
+	// Ability Systems
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 		
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -53,10 +60,42 @@ ADancysGameCharacter::ADancysGameCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
 }
 
 void ADancysGameCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+void ADancysGameCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (AThePlayerState* PlayerStateBase = GetPlayerState<AThePlayerState>())
+	{
+		// Set the ASC on the Server. Clients do this in OnRep_PlayerState()
+		AbilitySystemComponent = Cast<UAbilitySystemComponent>(PlayerStateBase->GetAbilitySystemComponent());
+		PlayerStateBase->GetAbilitySystemComponent()->InitAbilityActorInfo(PlayerStateBase, this);
+		CharacterAttributeSet = PlayerStateBase->CharacterAttributeSet;
+	}
+}
+
+void ADancysGameCharacter::OnRep_PlayerState()
+{
+
+	Super::OnRep_PlayerState();
+
+	if (AbilitySystemComponent == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_PlayerState - ASC null"));
+	}
+
+
+	if (AThePlayerState* PlayerStateBase = GetPlayerState<AThePlayerState>())
+	{
+		// Set the ASC on the Server. Clients do this in OnRep_PlayerState()
+		AbilitySystemComponent = PlayerStateBase->GetAbilitySystemComponent();
+		PlayerStateBase->GetAbilitySystemComponent()->InitAbilityActorInfo(PlayerStateBase, this);
+		CharacterAttributeSet = PlayerStateBase->CharacterAttributeSet;
+	}
 }
