@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "BaseCharacter.h"
+
 #include "DancysGameCharacter.generated.h"
 
 class USpringArmComponent;
@@ -15,8 +17,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game)
-class ADancysGameCharacter : public ACharacter
+UCLASS(config = Game)
+class ADancysGameCharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
 
@@ -27,7 +29,7 @@ class ADancysGameCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -45,24 +47,19 @@ class ADancysGameCharacter : public ACharacter
 	UInputAction* LookAction;
 
 public:
+
 	ADancysGameCharacter();
-	
 
 protected:
 
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-			
-
-protected:
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
 	// To add mapping context
 	virtual void BeginPlay();
+
+	// Called on the server to acknowledge possession of this Character.
+	virtual void PossessedBy(AController* NewController) override;
+
+	// Called on the client when the Character is assigned it's Player State.
+	virtual void OnRep_PlayerState() override;
 
 public:
 	/** Returns CameraBoom subobject **/
