@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "BaseCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 #include "DancysGameCharacter.generated.h"
 
@@ -61,16 +62,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<class UGameplayAbility> UnEquipAbility;
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	UFUNCTION(BlueprintCallable, Server, unreliable, WithValidation, Category = "Weapon")
 	void EquipRifle();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	UFUNCTION(BlueprintCallable, Server, unreliable, WithValidation, Category = "Weapon")
 	void UnEquipRifle();
 
 protected:
 
 	// To add mapping context
-	virtual void BeginPlay();
+	//virtual void BeginPlay();
 
 	// Called on the server to acknowledge possession of this Character.
 	virtual void PossessedBy(AController* NewController) override;

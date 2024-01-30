@@ -28,7 +28,7 @@ ADancysGameCharacter::ADancysGameCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -63,11 +63,11 @@ ADancysGameCharacter::ADancysGameCharacter()
 
 }
 
-void ADancysGameCharacter::BeginPlay()
-{
-	// Call the base class  
-	Super::BeginPlay();
-}
+//void ADancysGameCharacter::BeginPlay()
+//{
+//	// Call the base class  
+//	Super::BeginPlay();
+//}
 
 void ADancysGameCharacter::PossessedBy(AController* NewController)
 {
@@ -93,14 +93,22 @@ void ADancysGameCharacter::OnRep_PlayerState()
 
 	if (AThePlayerState* PlayerStateBase = GetPlayerState<AThePlayerState>())
 	{
-		// Set the ASC on the Server. Clients do this in OnRep_PlayerState()
-		AbilitySystemComponent = PlayerStateBase->GetAbilitySystemComponent();
+		// Set the ASC for clients. Server does this in PossessedBy.
+		AbilitySystemComponent = Cast<UAbilitySystemComponent>(PlayerStateBase->GetAbilitySystemComponent());
+
+		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
 		PlayerStateBase->GetAbilitySystemComponent()->InitAbilityActorInfo(PlayerStateBase, this);
+		//AbilitySystemComponent->InitAbilityActorInfo(PlayerStateBase, this);
 		CharacterAttributeSet = PlayerStateBase->CharacterAttributeSet;
 	}
 }
 
-void ADancysGameCharacter::EquipRifle()
+bool ADancysGameCharacter::EquipRifle_Validate()
+{
+	return true;
+}
+
+void ADancysGameCharacter::EquipRifle_Implementation()
 {
 	if (AbilitySystemComponent)
 	{
@@ -117,11 +125,15 @@ void ADancysGameCharacter::EquipRifle()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UWeaponItem::Use - Can't Equip. Ability System Component Not Set"));
+		UE_LOG(LogTemp, Warning, TEXT("ADancysGameCharacter::EquipRifle_Implementation - Can't Equip. Ability System Component Not Set"));
 	}
 }
 
-void ADancysGameCharacter::UnEquipRifle()
+bool ADancysGameCharacter::UnEquipRifle_Validate() {
+	return true;
+}
+
+void ADancysGameCharacter::UnEquipRifle_Implementation()
 {
 	if (AbilitySystemComponent)
 	{
@@ -138,6 +150,6 @@ void ADancysGameCharacter::UnEquipRifle()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UWeaponItem::Use - Can't UnEquip. Ability System Component Not Set"));
+		UE_LOG(LogTemp, Warning, TEXT("ADancysGameCharacter::UnEquipRifle_Validate - Can't UnEquip. Ability System Component Not Set"));
 	}
 }
