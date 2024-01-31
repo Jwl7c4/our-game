@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Weapon/Weapon.h"
 #include "AbilitySystemInterface.h"
+#include "Net/UnrealNetwork.h"
 
 #include "AbilityWeapon.generated.h"
 

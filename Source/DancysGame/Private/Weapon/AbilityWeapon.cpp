@@ -20,5 +20,5 @@ UAbilitySystemComponent* AAbilityWeapon::GetAbilitySystemComponent() const
 
 void AAbilityWeapon::BeginPlay()
 {
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);	
 }
