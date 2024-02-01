@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "BaseCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "GameplayTagContainer.h" 
 
 #include "DancysGameCharacter.generated.h"
 
@@ -67,6 +68,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Server, unreliable, WithValidation, Category = "Weapon")
 	void UnEquipRifle();
+
+	UPROPERTY(BlueprintReadWrite)
+	FGameplayTagContainer InteractableTags;
 
 protected:
 

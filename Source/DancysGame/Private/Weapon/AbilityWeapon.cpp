@@ -2,6 +2,7 @@
 
 
 #include "Weapon/AbilityWeapon.h"
+#include "Ability/WeaponAttributeSet.h"
 
 #include "AbilitySystemComponent.h"
 
@@ -11,6 +12,9 @@ AAbilityWeapon::AAbilityWeapon()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	// Non Ability attributes
+	WeaponAttributeSet = CreateDefaultSubobject<UWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
 }
 
 UAbilitySystemComponent* AAbilityWeapon::GetAbilitySystemComponent() const
@@ -21,4 +25,8 @@ UAbilitySystemComponent* AAbilityWeapon::GetAbilitySystemComponent() const
 void AAbilityWeapon::BeginPlay()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);	
+	if (!WeaponAttributeSet)
+	{
+		WeaponAttributeSet = NewObject<UWeaponAttributeSet>(this);
+	}
 }

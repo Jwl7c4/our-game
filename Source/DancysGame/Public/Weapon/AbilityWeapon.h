@@ -28,4 +28,7 @@ public:
 protected:
 
 	class UAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Components")
+	class UWeaponAttributeSet* WeaponAttributeSet;
 };
