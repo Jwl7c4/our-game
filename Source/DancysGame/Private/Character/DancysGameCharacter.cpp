@@ -29,6 +29,8 @@ ADancysGameCharacter::ADancysGameCharacter()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
+	bIsArmed = false;
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -68,6 +70,11 @@ ADancysGameCharacter::ADancysGameCharacter()
 //	// Call the base class  
 //	Super::BeginPlay();
 //}
+
+bool ADancysGameCharacter::isArmed()
+{
+	return bIsArmed;
+}
 
 void ADancysGameCharacter::PossessedBy(AController* NewController)
 {
@@ -122,6 +129,8 @@ void ADancysGameCharacter::EquipRifle_Implementation()
 
 		// Remove the ability after activation (if needed)
 		AbilitySystemComponent->ClearAbility(Spec.Handle);
+
+		bIsArmed = true;
 	}
 	else
 	{
@@ -147,6 +156,8 @@ void ADancysGameCharacter::UnEquipRifle_Implementation()
 
 		// Remove the ability after activation (if needed)
 		AbilitySystemComponent->ClearAbility(Spec.Handle);
+
+		bIsArmed = false;
 	}
 	else
 	{

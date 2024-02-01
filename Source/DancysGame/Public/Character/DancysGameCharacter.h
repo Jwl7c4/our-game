@@ -67,15 +67,17 @@ public:
 	void EquipRifle();
 
 	UFUNCTION(BlueprintCallable, Server, unreliable, WithValidation, Category = "Weapon")
-	void UnEquipRifle();
+	void UnEquipRifle(); 
 
-	UPROPERTY(BlueprintReadWrite)
-	FGameplayTagContainer InteractableTags;
+	UFUNCTION(BlueprintCallable)
+	bool isArmed();
 
 protected:
 
 	// To add mapping context
 	//virtual void BeginPlay();
+	
+	bool bIsArmed;
 
 	// Called on the server to acknowledge possession of this Character.
 	virtual void PossessedBy(AController* NewController) override;
