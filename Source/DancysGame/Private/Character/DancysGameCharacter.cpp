@@ -2,6 +2,7 @@
 
 #include "Character/DancysGameCharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -11,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Player/ThePlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -21,7 +23,14 @@ ADancysGameCharacter::ADancysGameCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
+	// Ability Systems
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	bIsArmed = false;
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -53,79 +62,105 @@ ADancysGameCharacter::ADancysGameCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
 }
 
-void ADancysGameCharacter::BeginPlay()
-{
-	// Call the base class  
-	Super::BeginPlay();
+//void ADancysGameCharacter::BeginPlay()
+//{
+//	// Call the base class  
+//	Super::BeginPlay();
+//}
 
-	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+bool ADancysGameCharacter::isArmed()
+{
+	return bIsArmed;
+}
+
+void ADancysGameCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (AThePlayerState* PlayerStateBase = GetPlayerState<AThePlayerState>())
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
+		// Set the ASC on the Server. Clients do this in OnRep_PlayerState()
+		AbilitySystemComponent = Cast<UAbilitySystemComponent>(PlayerStateBase->GetAbilitySystemComponent());
+		PlayerStateBase->GetAbilitySystemComponent()->InitAbilityActorInfo(PlayerStateBase, this);
+		CharacterAttributeSet = PlayerStateBase->CharacterAttributeSet;
 	}
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
-
-void ADancysGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ADancysGameCharacter::OnRep_PlayerState()
 {
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ADancysGameCharacter::Move);
+	Super::OnRep_PlayerState();
 
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADancysGameCharacter::Look);
+	if (AbilitySystemComponent == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_PlayerState - ASC null"));
+	}
+
+
+	if (AThePlayerState* PlayerStateBase = GetPlayerState<AThePlayerState>())
+	{
+		// Set the ASC for clients. Server does this in PossessedBy.
+		AbilitySystemComponent = Cast<UAbilitySystemComponent>(PlayerStateBase->GetAbilitySystemComponent());
+
+		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
+		PlayerStateBase->GetAbilitySystemComponent()->InitAbilityActorInfo(PlayerStateBase, this);
+		//AbilitySystemComponent->InitAbilityActorInfo(PlayerStateBase, this);
+		CharacterAttributeSet = PlayerStateBase->CharacterAttributeSet;
+	}
+}
+
+bool ADancysGameCharacter::EquipRifle_Validate()
+{
+	return true;
+}
+
+void ADancysGameCharacter::EquipRifle_Implementation()
+{
+	if (AbilitySystemComponent)
+	{
+		// Create an ability spec
+		FGameplayAbilitySpecDef SpecDef = FGameplayAbilitySpecDef();
+		SpecDef.Ability = EquipAbility;
+		FGameplayAbilitySpec Spec(SpecDef, 1); // Set level to 1 or the desired level
+
+		// todo - should this just be permanent?
+		AbilitySystemComponent->GiveAbilityAndActivateOnce(Spec);
+
+		// Remove the ability after activation (if needed)
+		AbilitySystemComponent->ClearAbility(Spec.Handle);
+
+		bIsArmed = true;
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("ADancysGameCharacter::EquipRifle_Implementation - Can't Equip. Ability System Component Not Set"));
 	}
 }
 
-void ADancysGameCharacter::Move(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
-	}
+bool ADancysGameCharacter::UnEquipRifle_Validate() {
+	return true;
 }
 
-void ADancysGameCharacter::Look(const FInputActionValue& Value)
+void ADancysGameCharacter::UnEquipRifle_Implementation()
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
+	if (AbilitySystemComponent)
 	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		// Create an ability spec
+		FGameplayAbilitySpecDef SpecDef = FGameplayAbilitySpecDef();
+		SpecDef.Ability = UnEquipAbility;
+		FGameplayAbilitySpec Spec(SpecDef, 1); // Set level to 1 or the desired level
+
+		// todo - should this just be permanent?
+		AbilitySystemComponent->GiveAbilityAndActivateOnce(Spec);
+
+		// Remove the ability after activation (if needed)
+		AbilitySystemComponent->ClearAbility(Spec.Handle);
+
+		bIsArmed = false;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ADancysGameCharacter::UnEquipRifle_Validate - Can't UnEquip. Ability System Component Not Set"));
 	}
 }

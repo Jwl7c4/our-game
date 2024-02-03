@@ -8,9 +8,6 @@
 
 #include "DancysGameplayAbility.generated.h"
 
-/**
- *
- */
 UCLASS()
 class DANCYSGAME_API UDancysGameplayAbility : public UGameplayAbility
 {
